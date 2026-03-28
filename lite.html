@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐾 우리 아이 성향 테스트 — 독BTI 라이트</title>
+    <meta name="description" content="24가지 질문으로 알아보는 우리 강아지 숨은 성향! 앙쥬레브 독BTI">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --beige: #FDFBF7;
+            --terra: #D98B71;
+            --sage: #8DA399;
+            --dark: #333333;
+        }
+        body { font-family: 'Noto Sans KR', sans-serif; background: var(--beige); color: var(--dark); overflow-x: hidden; }
+        .font-display { font-family: 'Outfit', 'Noto Sans KR', sans-serif; }
+        .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+        .fade-up { animation: fadeUp 0.6s ease-out both; }
+        @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        .bounce { animation: bounce 2s ease-in-out infinite; display:inline-block; }
+        @keyframes slideIn { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+        .slide-in { animation: slideIn 0.3s ease-out both; }
+        .dot-btn { transition: all 0.2s ease; }
+        .dot-btn:hover { transform:scale(1.2); border-color:var(--terra)!important; color:var(--terra)!important; background:rgba(217,139,113,.12); box-shadow:0 4px 16px rgba(217,139,113,.3); }
+        .dot-btn:active { transform:scale(0.9); }
+        @keyframes pop { 0%{transform:scale(0.7);opacity:0} 70%{transform:scale(1.08)} 100%{transform:scale(1);opacity:1} }
+        .pop { animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+        .card-1{animation:fadeUp .5s .05s both} .card-2{animation:fadeUp .5s .2s both} .card-3{animation:fadeUp .5s .35s both}
+        .progress-bar { height:5px; background:#E5E7EB; border-radius:999px; overflow:hidden; }
+        .progress-fill { height:100%; background:var(--terra); transition:width .4s ease; }
+        .share-btn { transition: all 0.25s ease; }
+        .share-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.15); }
+        .share-btn:active { transform: scale(0.97); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-8">
+
+    <!-- Progress Bar -->
+    <div id="progressBar" class="fixed top-0 left-0 w-full px-6 pt-4 pb-2 z-50 hidden bg-[var(--beige)]/80 backdrop-blur-sm">
+        <div class="max-w-xl mx-auto">
+            <div class="flex justify-between mb-1.5 text-xs font-medium">
+                <span class="text-[var(--sage)]" id="qLabel">1 / 24</span>
+                <span class="text-gray-400" id="pct">0%</span>
+            </div>
+            <div class="progress-bar"><div id="pFill" class="progress-fill" style="width:0%"></div></div>
+        </div>
+    </div>
+
+    <main id="app" class="w-full max-w-xl mt-4 md:mt-10 mb-16"></main>
+
+<script>
+const types = {
+    1:{name:"사교 리더형",emoji:"👑",summary:"활발하고 사람 좋아하고, 관리도 비교적 잘 되는 타입",
+       desc:"사람과 강아지에 대한 거부감이 적고 사회적 에너지가 높아요. 단체 생활 적응이 빠르고 규칙과 협력도 우수한 편이에요.",
+       tip:"흥분도 조절 훈련과 순서 지키기를 꾸준히 해주세요!",color:"#F97316"},
+    2:{name:"사교 자유형",emoji:"🎈",summary:"밝고 귀엽고 잘 노는데, 관리 안 하면 금방 날아가는 타입",
+       desc:"외향적이고 반응이 빠르며 즉흥성이 강해요. 재미있는 활동에 바로 달려들지만 집중력 훈련이 꼭 필요해요.",
+       tip:"'기다려', '천천히' 교육을 놀이처럼 반복해보세요!",color:"#EAB308"},
+    3:{name:"교감 집중형",emoji:"❤️",summary:"정서적 연결이 확실히 되면 정말 잘하는 타입",
+       desc:"보호자와의 정서적 연결이 핵심이에요. 믿는 사람 곁에서 훈련 참여도가 확 올라가는 감수성 깊은 아이예요.",
+       tip:"칭찬과 따뜻한 교감으로 자신감을 키워주세요!",color:"#EC4899"},
+    4:{name:"애착 감수형",emoji:"🧸",summary:"마음이 안정되면 천사, 흔들리면 바로 티 나는 타입",
+       desc:"감정과 관계의 영향을 크게 받아요. 의지할 사람이 있으면 안정되지만, 분리 상황에서는 예민해질 수 있어요.",
+       tip:"안정감을 먼저 쌓은 후 천천히 독립심을 길러주세요!",color:"#A855F7"},
+    5:{name:"탐색 엘리트형",emoji:"🕵️",summary:"조용하지만 일 하나는 기가 막히게 잘하는 타입",
+       desc:"목표가 생기면 집중력이 강하고 스스로 해결하려는 성향이 있어요. 단순 반복보다 과제형 활동을 좋아해요.",
+       tip:"노즈워크나 퍼즐 장난감으로 지적 호기심을 채워주세요!",color:"#3B82F6"},
+    6:{name:"독립 탐험형",emoji:"🧭",summary:"머리 좋고 재밌는데, 쉽게 통제되진 않는 타입",
+       desc:"호기심 많고 자기 방식이 분명해요. 말을 안 듣는 게 아니라 자기 기준과 흥미가 뚜렷한 개성 있는 아이예요.",
+       tip:"억지 통제보다 스스로 참여하게 유도하는 방식이 효과적이에요!",color:"#10B981"},
+    7:{name:"신중 안정형",emoji:"🛡️",summary:"처음엔 느리지만 자기 자리를 잡으면 매우 안정적인 타입",
+       desc:"낯선 자극엔 조심스럽지만 익숙한 환경에선 아주 안정적이에요. 충분한 적응 시간이 핵심이에요.",
+       tip:"작은 성공 경험을 반복하며 자신감을 키워주세요!",color:"#6366F1"},
+    8:{name:"경계 반응형",emoji:"🚧",summary:"성격이 강한 게 아니라, 보호막이 두꺼운 타입",
+       desc:"예민하고 자기 판단이 강해요. 낯선 자극에 방어적으로 반응하지만, 사실 겁이 많은 경우가 많아요.",
+       tip:"무리한 스킨십 없이 천천히 신뢰를 쌓아주세요!",color:"#EF4444"}
+};
+
+// 24문항 — 유형별 3문항 (각 유형 대표 문항 선정)
+const questions = [
+    {id:1,type:1,text:"낯선 사람에게 먼저 다가가거나 관심을 보이는 편이다."},
+    {id:3,type:1,text:"단체 환경에서도 비교적 빠르게 적응하는 편이다."},
+    {id:7,type:1,text:"활동적이지만 통제가 아주 안 되는 편은 아니다."},
+    {id:10,type:2,text:"재밌는 자극이 보이면 바로 달려가거나 끼어들려 한다."},
+    {id:12,type:2,text:"기다리기보다 먼저 움직이려는 성향이 강하다."},
+    {id:15,type:2,text:"산책이나 활동 중 주변 자극에 쉽게 끌린다."},
+    {id:17,type:3,text:"보호자나 교사의 표정, 목소리에 민감하게 반응한다."},
+    {id:20,type:3,text:"칭찬이나 교감이 있을 때 행동 집중력이 높아진다."},
+    {id:24,type:3,text:"압박감 있는 분위기에서는 위축되지만, 편안한 분위기에선 잘한다."},
+    {id:25,type:4,text:"보호자와 떨어질 때 불안해하거나 예민해지는 모습이 있다."},
+    {id:27,type:4,text:"컨디션이나 분위기에 따라 반응 차이가 큰 편이다."},
+    {id:32,type:4,text:"안정적인 관계 안에서는 아주 부드럽고 사랑스러운 반응을 보인다."},
+    {id:33,type:5,text:"노즈워크나 장난감 찾기를 시작하면 끝까지 해내려는 편이다."},
+    {id:36,type:5,text:"어려운 과제도 금방 포기하지 않는다."},
+    {id:40,type:5,text:"단순 놀이보다 과제형 활동에서 더 빛나는 편이다."},
+    {id:41,type:6,text:"새로운 물건이나 구조물을 보면 직접 탐색하려는 편이다."},
+    {id:45,type:6,text:"통제받는 느낌이 강하면 집중이 떨어지거나 저항하는 모습이 있다."},
+    {id:48,type:6,text:"'말을 안 듣는다'기보다 자기 기준이 뚜렷한 느낌이 있다."},
+    {id:50,type:7,text:"낯선 사람이나 개에게 바로 다가가기보다 먼저 관찰한다."},
+    {id:53,type:7,text:"갑작스러운 변화보다 예측 가능한 흐름을 더 선호한다."},
+    {id:56,type:7,text:"천천히 적응할 시간을 주면 좋은 모습을 보이는 편이다."},
+    {id:57,type:8,text:"낯선 사람이 가까이 오거나 만지려 하면 몸을 피하거나 긴장한다."},
+    {id:61,type:8,text:"간섭받는 느낌을 싫어하고 자기 거리를 중요하게 여긴다."},
+    {id:64,type:8,text:"친해지는 데 시간이 꽤 필요한 편이다."}
+];
+
+let step = 'landing', qi = 0, answers = [];
+
+const app = document.getElementById('app');
+const bar = document.getElementById('progressBar');
+
+function render() {
+    if(step==='landing') renderLanding();
+    else if(step==='test') renderTest();
+    else renderResults();
+}
+
+function renderLanding() {
+    bar.classList.add('hidden');
+    app.innerHTML = `
+    <div class="flex flex-col items-center text-center fade-up px-2">
+        <img src="logo.jpg" alt="앙쥬레브" class="w-24 h-24 object-contain rounded-3xl shadow-lg mb-5">
+        <div class="text-5xl mb-3"><span class="bounce">🐶</span></div>
+        <h1 class="font-display text-3xl md:text-4xl font-extrabold mb-3 leading-tight">
+            우리 아이 숨은 <span style="color:var(--terra)">성향</span> 알아보기
+        </h1>
+        <p class="text-gray-500 mb-2 text-sm leading-relaxed max-w-sm">
+            강아지에게도 성격이 있어요!<br>24가지 질문으로 우리 아이 성향을 알아보세요 🐾
+        </p>
+        <p class="text-xs text-gray-400 mb-8">총 24문항 · 약 2분</p>
+        <button onclick="startTest()" class="font-display font-bold text-white text-lg px-10 py-4 rounded-full shadow-lg" style="background:var(--terra);transition:all .3s" onmouseover="this.style.transform='translateY(-3px) scale(1.03)';this.style.boxShadow='0 14px 30px rgba(217,139,113,.45)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+            테스트 시작하기 &nbsp;✨
+        </button>
+        <div class="mt-8 flex gap-2 flex-wrap justify-center">
+            ${Object.values(types).map(t=>`<span class="text-2xl pop" title="${t.name}">${t.emoji}</span>`).join('')}
+        </div>
+        <p class="mt-3 text-xs text-gray-400">8가지 성향 중 우리 아이는?</p>
+    </div>`;
+}
+
+function renderTest() {
+    bar.classList.remove('hidden');
+    const pct = Math.round((qi/questions.length)*100);
+    document.getElementById('qLabel').textContent = `${qi+1} / ${questions.length}`;
+    document.getElementById('pct').textContent = `${pct}%`;
+    document.getElementById('pFill').style.width = pct+'%';
+    const q = questions[qi];
+    app.innerHTML = `
+    <div class="slide-in pt-10">
+        <div class="glass rounded-3xl p-7 shadow-md border border-white">
+            <p class="text-xs font-bold mb-4 tracking-widest" style="color:var(--sage)">Q ${qi+1}</p>
+            <p class="text-lg font-bold leading-snug mb-8" style="color:var(--dark)">${q.text}</p>
+            <div class="flex justify-center gap-4 mb-3">
+                ${[1,2,3,4,5].map(n=>`
+                <button onclick="pick(${n})" class="dot-btn w-12 h-12 rounded-full border-2 border-gray-200 text-sm font-bold text-gray-400">${n}</button>`).join('')}
+            </div>
+            <div class="flex justify-between text-xs font-semibold px-1 mt-1">
+                <span class="text-gray-400">전혀 아니다</span>
+                <span style="color:var(--terra)">매우 그렇다</span>
+            </div>
+        </div>
+        <div class="flex justify-center mt-5">
+            <button onclick="goBack()" class="text-sm font-bold text-gray-400 hover:underline ${qi===0?'invisible':''}" style="transition:color .2s">← 이전</button>
+        </div>
+    </div>`;
+}
+
+function renderResults() {
+    bar.classList.add('hidden');
+    const scores = {1:0,2:0,3:0,4:0,5:0,6:0,7:0,8:0};
+    answers.forEach(a=>scores[a.t]+=a.s);
+    const sorted = Object.entries(scores).map(([k,v])=>({id:+k,s:v})).sort((a,b)=>b.s-a.s);
+    const p = types[sorted[0].id];
+
+    app.innerHTML = `
+    <div class="fade-up text-center px-2">
+        <div class="text-4xl mb-3">🎉</div>
+        <h1 class="font-display text-2xl font-extrabold mb-1">결과가 나왔어요!</h1>
+        <p class="text-sm text-gray-400 mb-8">앙쥬레브 독BTI 분석 결과</p>
+
+        <div class="glass rounded-3xl p-8 shadow-lg border-2 mb-6 card-1" style="border-color:${p.color}30;background:${p.color}08">
+            <div class="inline-block text-white text-xs font-bold px-3 py-1 rounded-full mb-4 tracking-widest" style="background:${p.color}">우리 아이 성향</div>
+            <div class="text-6xl mb-3">${p.emoji}</div>
+            <h2 class="font-display text-3xl font-black mb-3" style="color:${p.color}">${p.name}</h2>
+            <p class="text-sm font-bold italic text-gray-600 mb-4 border-l-4 pl-4 text-left" style="border-color:${p.color}">"${p.summary}"</p>
+            <p class="text-sm text-gray-600 leading-relaxed text-left">${p.desc}</p>
+        </div>
+
+        <div class="glass rounded-3xl p-6 shadow-md border border-white mb-6 card-2 text-left">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-xl">💡</span>
+                <p class="font-bold text-sm">케어 포인트</p>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed">${p.tip}</p>
+        </div>
+
+        <div class="glass rounded-3xl p-6 shadow-md border border-white mb-8 card-3">
+            <p class="text-sm font-bold mb-4 text-gray-700">결과를 공유해보세요!</p>
+            <button onclick="doShare()" class="share-btn w-full font-display font-bold text-white py-4 rounded-2xl mb-3 flex items-center justify-center gap-2 text-base" style="background:var(--terra)">
+                <span>📤</span> 결과 공유하기
+            </button>
+            <button onclick="location.reload()" class="w-full font-bold py-3 rounded-2xl border-2 text-sm" style="border-color:var(--sage);color:var(--sage)">
+                다시 테스트하기
+            </button>
+        </div>
+
+        <div class="opacity-50 flex flex-col items-center gap-1 mt-4">
+            <img src="logo.jpg" alt="앙쥬레브" class="w-10 h-10 object-contain rounded-xl">
+            <p class="text-xs text-gray-400">본 테스트는 <strong>앙쥬레브</strong>가 제작하였습니다</p>
+        </div>
+    </div>`;
+
+    window._shareText = `🐾 우리 아이 독BTI 결과!\n\n${p.emoji} ${p.name}\n"${p.summary}"\n\n${p.desc}\n\n💡 케어 포인트: ${p.tip}\n\n— 앙쥬레브 독BTI —`;
+    window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function doShare() {
+    if(navigator.share) {
+        navigator.share({
+            title: '🐾 우리 아이 독BTI 결과',
+            text: window._shareText
+        }).catch(()=>{});
+    } else {
+        navigator.clipboard.writeText(window._shareText).then(()=>{
+            alert('결과가 클립보드에 복사되었습니다!\n카카오톡 등에 붙여넣기 해주세요 😊');
+        });
+    }
+}
+
+function startTest() { step='test'; qi=0; answers=[]; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+function pick(s) {
+    answers.push({t:questions[qi].type, s});
+    if(qi<questions.length-1){ qi++; render(); window.scrollTo({top:0,behavior:'smooth'}); }
+    else { step='results'; render(); }
+}
+function goBack() { if(qi>0){ qi--; answers.pop(); render(); } }
+
+render();
+</script>
+</body>
+</html>
