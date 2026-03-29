@@ -370,7 +370,13 @@
             // Find Primary and Secondary
             const sortedTypes = Object.entries(typeScores)
                 .map(([id, score]) => ({ id: parseInt(id), score }))
-                .sort((a, b) => b.score - a.score);
+                .sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    // 타이 브레이킹: 평균 점수 2점 이하(소극/신중)면 7, 8번 유형 우선
+                    const avg = a.score / 8;
+                    if (avg <= 2) return b.id - a.id;
+                    return a.id - b.id;
+                });
 
             const primary = sortedTypes[0];
             const secondary = sortedTypes[1];
